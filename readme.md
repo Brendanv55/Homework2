@@ -1,85 +1,100 @@
-# Documentation
+# Homework 2 — Banker's Algorithm (Process Safety)
 
-### Brendan Valleau
-### CS-OS 10/17/2025
-### Homework 1
-  
+# Author: Brendan Valleau
 
-  
+# Course: CS-OS — 10/17/2025
 
-## Compile Instructions
+This repository contains two C++ programs that implement the Banker's safety algorithm to determine whether a system is in a safe state and to compute a safe sequence of process execution given resource allocation data in JSON form.
 
-  
+Contents
+- `src/process0.cpp` — refactored implementation (modern C++ vectors, `computeSafety` function).
+- `src/input.json` — example input used for testing.
+- `json.hpp` — single-header nlohmann::json library used for parsing.
 
-  
+Prerequisites
+- A C++17-capable compiler (`g++` on Linux/macOS, `cl.exe` on Windows), and a terminal/PowerShell.
+- `json.hpp` must be present in `src/` (already included in this repo).
 
-**Step 1:** Open a split terminal, or have two separate terminals, both in the correct path (Starting Directory in Homework1)
+Build
 
-  
+Using g++ (Linux / MinGW / WSL / macOS):
 
-  
+```pwsh
+g++ -std=c++17 -g ./src/process0.cpp -o process0.exe
+```
 
-**Step 2:** Run the command to compile c++ files:
+Or build the other implementation:
 
-  
+```pwsh
+g++ -std=c++17 -g ./src/process.cpp -o process.exe
+```
 
-`g++ ./src/consumer.cpp -o ./compiled/consumer; g++ ./src/producer.cpp -o ./compiled/producer`
+Using Microsoft Visual C++ (Developer PowerShell):
 
-  
+```pwsh
+cl.exe /EHsc /std:c++17 /Zi /Fe:process0.exe src\process0.cpp
+```
 
- **Step 3:**
+Run
 
-  
+Both executables accept a path to a JSON input file as the first argument. If no argument is provided, `process.cpp` attempts to open `default.json`.
 
- **Run the producer first in either terminal:**
+Example:
 
-  
+```pwsh
+./process0.exe ./src/input.json
+./process.exe  ./src/input.json
+```
 
-  `./compiled/producer`
+JSON input format
 
-  
+Two slightly different input key formats are used by the two programs in this repo — be careful which program you run.
 
- **In the other terminal, start the consumer:**
+- `process.cpp` expects keys: `processes` (array) and `resources` (array).
+- `process0.cpp` expects keys: `Processes` (array) and `Resources` (array).
 
-  
+A compatible `Processes` entry looks like:
 
- `./compiled/consumer`
+```json
+{
+  "Processes": [
+    {
+      "Name": "P0",
+      "Max": [7, 5, 3],
+      "Allocation": [0, 1, 0]
+    },
+    {
+      "Name": "P1",
+      "Max": [3, 2, 2],
+      "Allocation": [2, 0, 0]
+    }
+  ],
+  "Resources": [
+    {"Name": "A","Max": [] "Available": 3 },
+  ]
+}
+```
 
-  
-  **Another way of executing:**
-  `./compiled/producer & ./compiled/consumer &` 
-   Hit enter once finished to terminate (does this automatically with split terminals)
+Notes on implementation
 
-  
+- `process.cpp` implements the safety algorithm inline in `main` using C-style arrays. It computes `Need = Max - Allocation`, iteratively tries to find processes whose need is <= available, and builds a safe sequence. 
 
-And so, the output will be the resulting input from the producer file. Examples of proper execution include the following:
+- `process0.cpp` extracts the safety logic into `computeSafety(...)` and uses `std::vector` containers. The function reads `Available`, builds a working copy (`Work`), checks process `Need` against `Work`, and records a safe sequence. The version in the repository has some small issues (result vector initialization and noisy printing) which were addressed in a suggested patch in this session.
 
-  
+Testing
 
-  
+Run the executable with `./src/input.json` to see the computed safe sequence and whether the state is safe or unsafe. 
 
-![Example](./files/image.png)
+Example run (PowerShell):
 
-  
+```pwsh
+g++ -std=c++17 -g ./src/process0.cpp -o process0.exe
+./process0.exe ./src/input.json
+```
 
-  
+Expected output (example):
 
-### Implementation
-
-  
-
-Using the standard C libraries, I used pthreads, shared memory, and a semaphore to implement the producer-consumer problem. For the data structure, I just had two `int`s, in & out, and a `int[2]` buffer to hold data. When initializing the shared data in the producer process, the address ptr is initialized to my data type.  I then detach the shared memory, and allow another thread to access. The first thread to access it is the first iteration of the producer method, called as a blocking wait from the main thread, waiting for it to finish. The producer writes a `1` to the buffer, increments the `in` data structure to `(in + 1) % 2`, Mod the size to account for a circular buffer.  And then the producer posts to the semaphore, allowing the consumer method to enter it's critical section while accessing the shared memory segment. In the consumer thread, it immediately calls `sem_wait()`,  waiting for the first producer to finish and post to the semaphore. Once this happens the thread enters it's critical process, reads from the structure, increments the `out` integer, the same as above, and exits the thread. Only the producer calls `sem_post()`, and only the consumer calls `sem_wait()`.
-
-  
-
-#### My struggles, Approach, and proccess:
-
-My first goal was to figure out which standard library I should use. I had some include issues with the `std::counting_semaphore`, and I began to try using the older c `semaphore.h` library. I ran into trouble several times figuring out the proper way to make use of the library. I started to check each call against the error value `-1` or the macro `SEM_FAILED`.  As the producer and consumer process are very similar, I spent most time debugging in the producer process and then copied over the working code into the consumer file and made the proper adjustments.
-
-  
-
-Once I began to understand how to use this library, I then began working on implementing my threading for the producer process. I had to once again, determine which library I should approach threading with, and decided on pthreads. They were the most straightforward for me to use, or at least in my personal opinion. I didn't run into too many bugs with the threading, other than figuring out I needed to pass a struct for multiple arguments.
-
-  
-
-Using shared memory was also a struggle, however through the painful process of debugging shared memory with the `ipcs` and `ipcrm` and the `errno` macros, I painstakingly figured out how to properly use the shared memory.
+```
+Safe sequence computed.
+P1 -> P3 -> P4 -> P0 -> P2
+```

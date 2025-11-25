@@ -10,14 +10,25 @@
 
 int RESOURCES, PROCESSES;
 
-void computeSafety(const std::vector<int>& Available, std::vector<int>& Work, std::vector<bool>& Finish, std::vector<std::vector<int>>& Need, std::vector<std::vector<int>>& Allocation) {
-    std::vector<int> result(PROCESSES);
-    // result.resize(PROCESSES);
+// bool canProcessFinish(auto resource, auto available, auto maxResource)
+// {
+//    bool returnVal = (resource.at(0) + available.at(0) >= maxResource.at(0));
+//    for (int i = 0; i < RESOURCES; i++) {
+//     returnVal = returnVal &&  (resource.at(i) + available.at(i) >= maxResource.at(i));
+//    }
+//    return returnVal;
+// }
+
+void computeSafety(std::vector<int>& Available, std::vector<int>& Work, std::vector<bool>& Finish, std::vector<std::vector<int>>& Need, std::vector<std::vector<int>>& Allocation, std::vector<std::vector<int>>& Max) {
+    std::vector<int> result;
+    result.reserve(PROCESSES);
+
+    Work = Available;
 
     for (int everyPass = 0; everyPass < PROCESSES; everyPass++) {
         //Check against other processes
         for (int process = 0; process < PROCESSES; process++) {
-            if (Finish[process] == false) {
+            if (!Finish.at(process)) {
                 // Check if load exceeds max
                 bool flag = true;
 
@@ -31,7 +42,7 @@ void computeSafety(const std::vector<int>& Available, std::vector<int>& Work, st
                 if (flag) {
                     // Safe
                     
-                    result.insert(result.end(), process);
+                    result.push_back(process); // Used to be insert at end
 
                     Finish[process] = true;
 
@@ -47,31 +58,26 @@ void computeSafety(const std::vector<int>& Available, std::vector<int>& Work, st
     for (int i = 0; i < PROCESSES; i++) if (Finish[i] == false) Safe = false;
     if (Safe) {
         std::cout << "Safe sequence computed.\n";
+        std::cout << "Result length: " << result.size() << " finish: " << Finish.size() << "\n";
         for (std::vector<int>::iterator i = result.begin(); i < result.end(); i++) {
-            // i++;
-            // if (i == result.end()) {
-            //     i--;
-            //     std::cout << "P" << *i << "\nEnd of sequence.\n";
-            // } else i--;
-            std::cout << "P" << *i << " -> ";
-        }
-    } else {
-        std::cout << "Unsafe sequence.\n";
-        for (std::vector<int>::iterator i = result.begin(); i < result.end(); i++) {
-            // i++;
-            // if (i == result.end()) {
-            //     i--;
-            //     std::cout << "P" << *i << "\nEnd of sequence.\n";
-            // } else i--;
             std::cout << "P" << *i << " -> ";
         }
         for (std::vector<bool>::iterator i = Finish.begin(); i < Finish.end(); i++) {
-            // i++;
-            // if (i == result.end()) {
-            //     i--;
-            //     std::cout << "P" << *i << "\nEnd of sequence.\n";
-            // } else i--;
-            // std::cout << "P" << *i << " -> ";
+            std::cout << *i << ", ";
+        }
+        std::cout<< "\n\n";
+    } else {
+        std::cout << "Unsafe sequence.\n";
+        for (std::vector<int>::iterator i = result.begin(); i < result.end(); i++) {
+            i++;
+            if (i == result.end()) {
+                i--;
+                std::cout << "P" << *i << "\nEnd of sequence.\n";
+                break;
+            } else i--;
+            std::cout << "P" << *i << " -> ";
+        }
+        for (std::vector<bool>::iterator i = Finish.begin(); i < Finish.end(); i++) {
             std::cout << *i << ", ";
         }
     }
@@ -129,5 +135,5 @@ int main(int argc, char* argv[]) {
             Need[PID][RID] = Max[PID][RID] - Allocation[PID][RID];
         }
     }
-    computeSafety(Available, Work, Finish, Need, Allocation);
+    computeSafety(Available, Work, Finish, Need, Allocation, Max);
 }
