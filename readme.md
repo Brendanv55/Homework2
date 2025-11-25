@@ -82,3 +82,7 @@ Expected output (example):
 Safe sequence computed.
 P1 -> P3 -> P4 -> P0 -> P2
 ```
+
+Examples:
+
+[img](/files/image.png)
