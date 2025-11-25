@@ -23,11 +23,6 @@ Using g++ (Linux / MinGW / WSL / macOS):
 g++ -std=c++17 -g ./src/process0.cpp -o process0.exe
 ```
 
-Or build the other implementation:
-
-```pwsh
-g++ -std=c++17 -g ./src/process.cpp -o process.exe
-```
 
 Using Microsoft Visual C++ (Developer PowerShell):
 
@@ -43,14 +38,10 @@ Example:
 
 ```pwsh
 ./process0.exe ./src/input.json
-./process.exe  ./src/input.json
 ```
 
 JSON input format
 
-Two slightly different input key formats are used by the two programs in this repo — be careful which program you run.
-
-- `process.cpp` expects keys: `processes` (array) and `resources` (array).
 - `process0.cpp` expects keys: `Processes` (array) and `Resources` (array).
 
 A compatible `Processes` entry looks like:
@@ -63,21 +54,14 @@ A compatible `Processes` entry looks like:
       "Max": [7, 5, 3],
       "Allocation": [0, 1, 0]
     },
-    {
-      "Name": "P1",
-      "Max": [3, 2, 2],
-      "Allocation": [2, 0, 0]
-    }
   ],
   "Resources": [
-    {"Name": "A","Max": [] "Available": 3 },
+    {"Name": "A","Max": [6,6,2] "Available": [3,4,5] },
   ]
 }
 ```
 
-Notes on implementation
-
-- `process.cpp` implements the safety algorithm inline in `main` using C-style arrays. It computes `Need = Max - Allocation`, iteratively tries to find processes whose need is <= available, and builds a safe sequence. 
+Notes on implementation 
 
 - `process0.cpp` extracts the safety logic into `computeSafety(...)` and uses `std::vector` containers. The function reads `Available`, builds a working copy (`Work`), checks process `Need` against `Work`, and records a safe sequence. The version in the repository has some small issues (result vector initialization and noisy printing) which were addressed in a suggested patch in this session.
 
