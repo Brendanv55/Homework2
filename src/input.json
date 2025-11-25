@@ -1,0 +1,14 @@
+{
+    "Resources": [
+        {"Name": "A", "Instances":10, "Available":3},
+        {"Name": "B", "Instances":5, "Available":2},
+        {"Name": "C", "Instances":7, "Available":2}
+    ],
+    "Processes": [
+        {"Name":"P0", "Allocation": [0,1,0], "Max":[7,5,3]},
+        {"Name":"P1", "Allocation": [2,0,0], "Max":[3,2,2]},
+        {"Name":"P2", "Allocation": [3,0,2], "Max":[9,0,2]},
+        {"Name":"P3", "Allocation": [2,1,1], "Max":[2,2,2]},
+        {"Name":"P4", "Allocation": [0,0,2], "Max":[4,3,3]}
+    ]
+}
